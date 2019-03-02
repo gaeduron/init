@@ -1,0 +1,7 @@
+#!/bin/bash
+source colors.sh
+
+
+MAC_ADDRESS=$(ifconfig en0 | grep 'ether .*' | sed /.\*ether\ /s///)
+
+echo "Your MAC address: ${Green}$MAC_ADDRESS${NC}"

@@ -1,0 +1,6 @@
+#!/bin/bash
+source colors.sh
+
+
+gateway=$(netstat -rn | grep -m 1 'default' | sed /default\ \*/s/// | sed s/\ \.\*//)
+echo "Route table default gateway: ${Green}$gateway${NC}"

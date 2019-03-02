@@ -1,0 +1,78 @@
+#!/bin/bash
+source ./../network/colors.sh
+MUSIC_DIR=~/YMC/tmp_musics
+COMPIL_DIR=~/YMC/compilations
+VIDEO_FILE=$1
+EMAIL=$2
+COMPIL_NAME=$3
+DATE=`date +'%d-%m-%y_%H-%M'`
+
+
+#
+# LIBRARY
+#
+
+print_usage() {
+  if [[ -z "$1" ]] || [[ -z "$2" ]]; then
+    echo "Usage:"
+    echo "$> sh 03 <path/to/file> <email> [compilation_name]\n"
+    echo "The file should contain one URL per line"
+    exit
+  fi
+  type youtube-dl >/dev/null 2>&1 || { echo >&2 "I require youtube-dl but it's not installed.\nAborting."; exit 1; }
+}
+
+validate_file() {
+  if [ ! -f $1 ]; then
+    echo "File does not exist: $1"
+    exit
+  fi
+  if [ -s /tmp/userdel_errors.tmp ]; then
+    echo "File is empty, please provide a file with a video url per line"
+    exit
+  fi
+}
+
+create_folder() {
+  mkdir -p $MUSIC_DIR
+  mkdir -p $COMPIL_DIR
+}
+
+dl_videos() {
+  youtube-dl --extract-audio --audio-format mp3 -o "$MUSIC_DIR/%(title)s.%(ext)s" --batch-file $1
+}
+
+#
+# SCRIPT
+#
+
+print_usage $VIDEO_FILE $EMAIL
+echo "🚀  Welcome to ${Red}Youtube music compilator${NC}!"
+validate_file $VIDEO_FILE
+create_folder
+rm $MUSIC_DIR/* $COMPIL_DIR/* &
+echo "\n${Green}🚚  Downloading videos...${NC}\n"
+dl_videos $VIDEO_FILE
+# compile all audio
+COMPIL_FILE=compilation_$DATE.mp3
+if [[ -z "$COMPIL_NAME" ]]; then
+  COMPIL_NAME=$COMPIL_FILE
+else
+  COMPIL_NAME=$COMPIL_NAME.mp3
+fi
+echo "\n${Green}💽  Creating compilation...${NC}\n"
+cat $MUSIC_DIR/*.mp3 > "$COMPIL_DIR/$COMPIL_NAME"
+
+COMPIL_SIZE=`stat -f%z ./03`
+if (( $COMPIL_SIZE < 30000000 )); then
+  echo "\n🛰  ${Green}Uploading compilation...${NC}\n"
+  # send audio to cloud
+  DOWNLOAD_URL=`curl --upload-file $COMPIL_DIR/$COMPIL_NAME https://filepush.co/upload/$COMPIL_NAME` 
+  # send link to email
+  echo "\n✉️  ${Green}Sending email with compilation...${NC}\n"
+  echo "Click this link to download your music: $DOWNLOAD_URL" | mail -s "YMC - Time for some music" $EMAIL
+else
+  echo "⚠️  Your compilation is too big to be sent by email (max 30mb)\nYou can use https://wetransfer.com/"
+  echo "📀  Compilation: ${Blue}$COMPIL_DIR/$COMPIL_NAME${NC}"
+fi
+echo "${Green}✅ Done!${NC}"

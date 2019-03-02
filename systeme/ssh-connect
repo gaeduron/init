@@ -1,0 +1,5 @@
+This command will connect to port 3022 of the virtual machine
+init-account is the name of the user we try to connect to
+127.0.0.1 is the localhost address
+
+ssh -p 3022 init-account@127.0.0.1

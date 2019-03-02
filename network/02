@@ -1,0 +1,16 @@
+#!/bin/bash
+RED='\033[1;31m'
+GREEN='\033[1;32m'
+BLUE='\033[1;34m'
+NC='\033[0m'
+
+brdcst_addrss=$(ifconfig en0 | grep -o 'broadcast .*' | sed /broadcast\ /s///)
+
+
+echo "Ethernet broadcast address: ${GREEN}$brdcst_addrss${NC}"
+
+echo "\n${BLUE}Pinging broadcast address...${NC}"
+ping -o $brdcst_addrss
+
+echo "\n${GREEN}Starting Address Resolution Protocol... (arp -a)${NC}"
+arp -a

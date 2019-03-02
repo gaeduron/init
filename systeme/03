@@ -1,0 +1,4 @@
+as root
+vim /etc/hostname
+
+change your hostname at first line

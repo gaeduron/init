@@ -1,0 +1,26 @@
+#!/bin/sh
+
+if [[ -z "$1" ]]; then
+  echo "Usage:"
+  echo "$> sh 02 <username>\n"
+  exit
+fi
+
+echo "Deleting user: $1..."
+if [ -f /tmp/userdel_errors.tmp ]; then
+  rm /tmp/userdel_errors.tmp
+fi
+sudo userdel $1 2> /tmp/userdel_errors.tmp
+
+if [ -s /tmp/userdel_errors.tmp ];
+then
+  echo "User $1 is currently connected"
+  echo "Killing user process"
+  process=`cat /tmp/userdel_errors.tmp | sed s/\.\*process\ //`
+  echo $process
+  sudo kill -9 $process
+  sudo userdel -f $1
+  echo "$1 Has been deleted"
+else
+  echo "User $1 has been deleted!"
+fi
